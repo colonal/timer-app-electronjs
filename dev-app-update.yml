@@ -1,4 +1,3 @@
-owner: example.com
+owner: colonel
 repo: timer-app
 provider: github
-publishAutoUpdate: true 

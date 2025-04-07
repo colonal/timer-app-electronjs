@@ -3,6 +3,7 @@ import { app, BrowserWindow, ipcMain, shell } from 'electron'
 import { globalShortcut } from 'electron/main'
 import { join } from 'path'
 import icon from '../../resources/icon.png?asset'
+import { forceUpdate } from './updater'
 
 function createWindow(): void {
   // Create the browser window.
@@ -97,6 +98,9 @@ app.whenReady().then(() => {
       createWindow()
     }
   })
+
+  // checkForUpdates()
+  forceUpdate()
 })
 
 // Quit when all windows are closed, except on macOS. There, it's common
