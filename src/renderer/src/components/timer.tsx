@@ -119,7 +119,7 @@ function Timer({ isOverlay }: TimerProps): JSX.Element {
       {isEditing ? (
         <div className="flex justify-center">
           <div>
-            <h3>Timer {isOverlay ? 'Overlay' : ''}</h3>
+            <h3 className="text-stone-500">Timer {isOverlay ? 'Overlay' : ''}</h3>
             <InputField
               label="Hours"
               value={values.hours}
@@ -157,11 +157,7 @@ function Timer({ isOverlay }: TimerProps): JSX.Element {
           </div>
           <div
             id="timer-button"
-            className={
-              !isOverlay
-                ? 'text-stone-500 flex justify-center bg-black bg-opacity-10 rounded-xl'
-                : 'hidden'
-            }
+            className={!isOverlay ? 'text-stone-500 flex justify-center rounded-xl' : 'hidden'}
           >
             {isActive ? (
               <>

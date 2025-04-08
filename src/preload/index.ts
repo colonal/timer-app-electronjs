@@ -1,8 +1,39 @@
 import { electronAPI } from '@electron-toolkit/preload'
 import { contextBridge } from 'electron'
+import { ipcRenderer } from 'electron/renderer'
+
+type OverlayModeCallback = (isOverlay: boolean) => void
 
 // Custom APIs for renderer
-const api = {}
+const api = {
+  close: (): void => {
+    ipcRenderer.send('close')
+  },
+  minimize: (): void => {
+    ipcRenderer.send('minimize')
+  },
+  maximize: (): void => {
+    ipcRenderer.send('maximize')
+  },
+  checkUpdate: (): void => {
+    ipcRenderer.send('check-update')
+  },
+  forceUpdate: (): void => {
+    ipcRenderer.send('force-update')
+  },
+  overlayMode: (callback: OverlayModeCallback): void => {
+    ipcRenderer.on('overlay-mode', (_, isOverlay) => {
+      console.log('preload: overlay-mode', isOverlay)
+      callback(isOverlay)
+    })
+  },
+  removeAllListeners: (event: string): void => {
+    ipcRenderer.removeAllListeners(event)
+  },
+  appVersion: (): string => {
+    return ipcRenderer.sendSync('app-version')
+  }
+}
 
 // Use `contextBridge` APIs to expose Electron APIs to
 // renderer only if context isolation is enabled, otherwise

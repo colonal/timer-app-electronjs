@@ -3,7 +3,7 @@ import { app, BrowserWindow, ipcMain, shell } from 'electron'
 import { globalShortcut } from 'electron/main'
 import { join } from 'path'
 import icon from '../../resources/icon.png?asset'
-import { forceUpdate } from './updater'
+import { checkForUpdates, forceUpdate } from './updater'
 
 function createWindow(): void {
   // Create the browser window.
@@ -27,7 +27,8 @@ function createWindow(): void {
   globalShortcut.register(toggleOverLayHotkey, () => {
     isOverlayOn = !isOverlayOn
     window.setIgnoreMouseEvents(isOverlayOn)
-    window.webContents.send('overlay=mode', isOverlayOn)
+    console.log('main: overlay-mode', isOverlayOn)
+    window.webContents.send('overlay-mode', isOverlayOn)
   })
 
   window.setAlwaysOnTop(true, 'normal')
@@ -47,6 +48,10 @@ function createWindow(): void {
     window.loadURL(process.env['ELECTRON_RENDERER_URL'])
   } else {
     window.loadFile(join(__dirname, '../renderer/index.html'))
+  }
+
+  if (is.dev) {
+    window.webContents.openDevTools()
   }
 }
 
@@ -89,6 +94,19 @@ app.whenReady().then(() => {
     win?.close()
   })
 
+  ipcMain.on('check-update', () => {
+    checkForUpdates()
+  })
+
+  ipcMain.on('force-update', () => {
+    forceUpdate()
+  })
+
+  ipcMain.on('app-version', (event) => {
+    console.log('app-version')
+    event.returnValue = app.getVersion()
+  })
+
   createWindow()
 
   app.on('activate', function () {
@@ -98,9 +116,6 @@ app.whenReady().then(() => {
       createWindow()
     }
   })
-
-  // checkForUpdates()
-  forceUpdate()
 })
 
 // Quit when all windows are closed, except on macOS. There, it's common

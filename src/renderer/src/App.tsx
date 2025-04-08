@@ -3,17 +3,20 @@ import TopBar from './components/TopBar'
 import Timer from './components/timer'
 
 function App(): JSX.Element {
-  const [isOverlayOpen, setIsOverlayOpen] = useState(false)
+  const [isOverlayOpen, setIsOverlayOpen] = useState<boolean>(false)
 
   useEffect(() => {
-    window.electron.ipcRenderer.on('overlay=mode', () => {
-      setIsOverlayOpen(!isOverlayOpen)
+    // Set up overlay mode listener with callback
+    window.api.overlayMode((isOverlay) => {
+      setIsOverlayOpen(isOverlay)
     })
 
+    // Clean up listener when component unmounts
     return (): void => {
-      window.electron.ipcRenderer.removeAllListeners('overlay=mode')
+      window.api.removeAllListeners('overlay-mode')
     }
-  })
+  }, [])
+
   return (
     <>
       <div className={!isOverlayOpen ? 'visible' : 'invisible'}>
