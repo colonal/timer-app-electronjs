@@ -116,8 +116,9 @@ app.whenReady().then(() => {
       createWindow()
     }
   })
-
-  checkForUpdates()
+  if (process.env.NODE_ENV === 'production') {
+    checkForUpdates()
+  }
 })
 
 // Quit when all windows are closed, except on macOS. There, it's common

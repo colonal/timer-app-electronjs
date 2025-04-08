@@ -1,3 +1,4 @@
+import { is } from '@electron-toolkit/utils'
 import { BrowserWindow, dialog } from 'electron'
 import log from 'electron-log'
 import { autoUpdater } from 'electron-updater'
@@ -14,7 +15,7 @@ let progressWindow: BrowserWindow | null = null
 function createProgressWindow(): void {
   progressWindow = new BrowserWindow({
     width: 400,
-    height: 150,
+    height: 180,
     frame: false,
     resizable: false,
     webPreferences: {
@@ -23,8 +24,16 @@ function createProgressWindow(): void {
     }
   })
 
-  progressWindow.loadFile(path.join(__dirname, '../renderer/progress.html'))
+  // Use the correct path for both development and production
+  const progressPath = is.dev
+    ? path.join(__dirname, '../renderer/progress.html')
+    : path.join(__dirname, '../renderer/renderer/progress.html')
+
+  progressWindow.loadFile(progressPath)
   progressWindow.setAlwaysOnTop(true)
+  if (is.dev) {
+    progressWindow.webContents.openDevTools()
+  }
 }
 
 // Enable updates in development mode
@@ -94,10 +103,11 @@ autoUpdater.on('update-downloaded', (info) => {
 
 autoUpdater.on('download-progress', (progress) => {
   log.info(`Download progress: ${progress.percent}%`)
-  if (!progressWindow) {
+  if (progressWindow) {
+    progressWindow?.webContents.send('update-progress', Math.round(progress.percent))
+  } else {
     createProgressWindow()
   }
-  progressWindow?.webContents.send('update-progress', Math.round(progress.percent))
 })
 
 autoUpdater.on('error', (error) => {
@@ -138,3 +148,5 @@ export function forceUpdate(): void {
       log.error('Error during force update:', err)
     })
 }
+
+export { createProgressWindow }
