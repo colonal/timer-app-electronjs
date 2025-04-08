@@ -116,6 +116,8 @@ app.whenReady().then(() => {
       createWindow()
     }
   })
+
+  checkForUpdates()
 })
 
 // Quit when all windows are closed, except on macOS. There, it's common

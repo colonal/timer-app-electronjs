@@ -1,10 +1,31 @@
 import { BrowserWindow, dialog } from 'electron'
 import log from 'electron-log'
 import { autoUpdater } from 'electron-updater'
+import * as path from 'path'
 
 // Configure logger
 autoUpdater.logger = log
 log.transports.file.level = 'info'
+
+// Progress window reference
+let progressWindow: BrowserWindow | null = null
+
+// Create progress window
+function createProgressWindow(): void {
+  progressWindow = new BrowserWindow({
+    width: 400,
+    height: 150,
+    frame: false,
+    resizable: false,
+    webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: false
+    }
+  })
+
+  progressWindow.loadFile(path.join(__dirname, '../renderer/progress.html'))
+  progressWindow.setAlwaysOnTop(true)
+}
 
 // Enable updates in development mode
 if (process.env.NODE_ENV === 'development') {
@@ -41,6 +62,8 @@ autoUpdater.on('update-not-available', (info) => {
 
 autoUpdater.on('update-downloaded', (info) => {
   log.info('Update downloaded:', info)
+  progressWindow?.close()
+  progressWindow = null
   dialog
     .showMessageBox({
       title: 'Update Downloaded',
@@ -49,14 +72,19 @@ autoUpdater.on('update-downloaded', (info) => {
     })
     .then((result) => {
       if (result.response === 0) {
+        log.info('User chose to install update, preparing to restart...')
         // Close all windows before installing
         const windows = BrowserWindow.getAllWindows()
+        log.info(`Closing ${windows.length} windows before update`)
         windows.forEach((window) => window.close())
 
         // Give time for windows to close
         setTimeout(() => {
-          autoUpdater.quitAndInstall(false, true)
+          log.info('Calling quitAndInstall with restart=true')
+          autoUpdater.quitAndInstall(true, true)
         }, 1000)
+      } else {
+        log.info('User chose to install later')
       }
     })
     .catch((err) => {
@@ -66,6 +94,10 @@ autoUpdater.on('update-downloaded', (info) => {
 
 autoUpdater.on('download-progress', (progress) => {
   log.info(`Download progress: ${progress.percent}%`)
+  if (!progressWindow) {
+    createProgressWindow()
+  }
+  progressWindow?.webContents.send('update-progress', Math.round(progress.percent))
 })
 
 autoUpdater.on('error', (error) => {
