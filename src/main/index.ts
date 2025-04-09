@@ -5,7 +5,7 @@ import { join } from 'path'
 import icon from '../../resources/icon.png?asset'
 import { checkForUpdates, forceUpdate } from './updater'
 
-function createWindow(): void {
+function createWindow(): BrowserWindow {
   // Create the browser window.
   const window = new BrowserWindow({
     width: 600,
@@ -53,6 +53,8 @@ function createWindow(): void {
   if (is.dev) {
     window.webContents.openDevTools()
   }
+
+  return window
 }
 
 // This method will be called when Electron has finished
@@ -116,7 +118,8 @@ app.whenReady().then(() => {
       createWindow()
     }
   })
-  if (process.env.NODE_ENV === 'production') {
+  console.log('is.dev', is.dev)
+  if (!is.dev) {
     checkForUpdates()
   }
 })

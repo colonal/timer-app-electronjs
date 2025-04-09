@@ -1,5 +1,5 @@
 import { is } from '@electron-toolkit/utils'
-import { BrowserWindow, dialog } from 'electron'
+import { app, BrowserWindow, dialog } from 'electron'
 import log from 'electron-log'
 import { autoUpdater } from 'electron-updater'
 import * as path from 'path'
@@ -73,32 +73,21 @@ autoUpdater.on('update-downloaded', (info) => {
   log.info('Update downloaded:', info)
   progressWindow?.close()
   progressWindow = null
-  dialog
-    .showMessageBox({
-      title: 'Update Downloaded',
-      message: 'The update has been downloaded. Would you like to install it now?',
-      buttons: ['Install', 'Later']
-    })
-    .then((result) => {
-      if (result.response === 0) {
-        log.info('User chose to install update, preparing to restart...')
-        // Close all windows before installing
-        const windows = BrowserWindow.getAllWindows()
-        log.info(`Closing ${windows.length} windows before update`)
-        windows.forEach((window) => window.close())
+  log.info('User chose to install update, preparing to restart...')
 
-        // Give time for windows to close
-        setTimeout(() => {
-          log.info('Calling quitAndInstall with restart=true')
-          autoUpdater.quitAndInstall(true, true)
-        }, 1000)
-      } else {
-        log.info('User chose to install later')
-      }
+  setImmediate(() => {
+    app.removeAllListeners('window-all-closed')
+
+    const browserWindows = BrowserWindow.getAllWindows()
+    log.info(`Closing ${browserWindows.length} windows before update`)
+
+    browserWindows.forEach(function (browserWindow) {
+      browserWindow.removeAllListeners('close')
     })
-    .catch((err) => {
-      log.error('Error showing install dialog:', err)
-    })
+
+    // TODO: Check if this is the correct way to quit and install
+    autoUpdater.quitAndInstall(false)
+  })
 })
 
 autoUpdater.on('download-progress', (progress) => {
