@@ -1,5 +1,5 @@
 import { is } from '@electron-toolkit/utils'
-import { app, BrowserWindow, dialog } from 'electron'
+import { app, BrowserWindow, dialog, Menu } from 'electron'
 import log from 'electron-log'
 import { autoUpdater } from 'electron-updater'
 import * as path from 'path'
@@ -15,19 +15,23 @@ let progressWindow: BrowserWindow | null = null
 function createProgressWindow(): void {
   progressWindow = new BrowserWindow({
     width: 400,
-    height: 180,
-    frame: false,
+    height: 220,
     resizable: false,
+    closable: false,
+    maximizable: false,
+    autoHideMenuBar: true,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false
     }
   })
 
+  Menu.setApplicationMenu(null)
+
   // Use the correct path for both development and production
   const progressPath = is.dev
     ? path.join(__dirname, '../renderer/progress.html')
-    : path.join(__dirname, '../renderer/renderer/progress.html')
+    : path.join(__dirname, '../renderer/progress.html')
 
   progressWindow.loadFile(progressPath)
   progressWindow.setAlwaysOnTop(true)
